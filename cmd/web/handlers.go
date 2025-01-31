@@ -18,28 +18,9 @@ func (app *application) home(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	for _, snippet := range snippets {
-		fmt.Fprintf(w, "%+v\n", snippet)
-	}
-
-	// files := []string{
-	// 	"./ui/html/pages/home.tmpl.html",
-	// 	"./ui/html/base.tmpl.html",
-	// 	"./ui/html/partials/nav.tmpl.html",
-	// }
-
-	// // Read file into template set
-	// ts, err := template.ParseFiles(files...)
-	// if err != nil {
-	// 	app.serverError(w, r, err)
-	// 	return
-	// }
-
-	// // Write template content as response body
-	// err = ts.ExecuteTemplate(w, "base", nil)
-	// if err != nil {
-	// 	app.serverError(w, r, err)
-	// }
+	app.render(w,r,http.StatusOK,"home.tmpl.html", templateData{
+		Snippets: snippets,
+	})
 }
 
 func (app *application) snippetView(w http.ResponseWriter, r *http.Request) {
@@ -52,7 +33,6 @@ func (app *application) snippetView(w http.ResponseWriter, r *http.Request) {
 
 	// Fetch snippet from db
 	snippet, err := app.snippets.Get(id)
-	fmt.Printf("%+v", snippet)
 	if err != nil {
 		if errors.Is(err, models.ErrNoRecords) {
 			http.NotFound(w, r) // snippet does not exist
@@ -62,7 +42,9 @@ func (app *application) snippetView(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	fmt.Fprintf(w, "%+v", snippet)
+	app.render(w,r,http.StatusOK, "view.tmpl.html", templateData{
+		Snippet: snippet,
+	})
 }
 
 func (app *application) snippetCreateForm(w http.ResponseWriter, r *http.Request) {
