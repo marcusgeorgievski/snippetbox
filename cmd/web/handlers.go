@@ -1,44 +1,68 @@
 package main
 
 import (
+	"errors"
 	"fmt"
-	"html/template"
 	"net/http"
 	"strconv"
+
+	"github.com/marcusgeorgievski/snippetbox/internal/models"
 )
 
 func (app *application) home(w http.ResponseWriter, r *http.Request) {
 	w.Header().Add("Server", "Go")
 
-	files := []string{
-		"./ui/html/pages/home.tmpl.html",
-		"./ui/html/base.tmpl.html",
-		"./ui/html/partials/nav.tmpl.html",
-	}
-
-	// Read file into template set
-	ts, err := template.ParseFiles(files...)
+	snippets, err := app.snippets.Latest()
 	if err != nil {
-		app.serverError(w, r, err)
+		app.serverError(w,r,err)
 		return
 	}
 
-	// Write template content as response body
-	err = ts.ExecuteTemplate(w, "base", nil)
-	if err != nil {
-		app.serverError(w, r, err)
+	for _, snippet := range snippets {
+		fmt.Fprintf(w, "%+v\n", snippet)
 	}
+
+	// files := []string{
+	// 	"./ui/html/pages/home.tmpl.html",
+	// 	"./ui/html/base.tmpl.html",
+	// 	"./ui/html/partials/nav.tmpl.html",
+	// }
+
+	// // Read file into template set
+	// ts, err := template.ParseFiles(files...)
+	// if err != nil {
+	// 	app.serverError(w, r, err)
+	// 	return
+	// }
+
+	// // Write template content as response body
+	// err = ts.ExecuteTemplate(w, "base", nil)
+	// if err != nil {
+	// 	app.serverError(w, r, err)
+	// }
 }
 
 func (app *application) snippetView(w http.ResponseWriter, r *http.Request) {
+	// Get id and validate value
 	id, err := strconv.Atoi(r.PathValue("id"))
-
 	if err != nil || id < 1 {
 		http.NotFound(w, r)
 		return
 	}
 
-	fmt.Fprintf(w, "Displaying snippet with ID %d...", id)
+	// Fetch snippet from db
+	snippet, err := app.snippets.Get(id)
+	fmt.Printf("%+v", snippet)
+	if err != nil {
+		if errors.Is(err, models.ErrNoRecords) {
+			http.NotFound(w, r) // snippet does not exist
+		} else {
+			app.serverError(w, r, err) // some other server error
+		}
+		return
+	}
+
+	fmt.Fprintf(w, "%+v", snippet)
 }
 
 func (app *application) snippetCreateForm(w http.ResponseWriter, r *http.Request) {
@@ -46,7 +70,22 @@ func (app *application) snippetCreateForm(w http.ResponseWriter, r *http.Request
 }
 
 func (app *application) snippetCreatePost(w http.ResponseWriter, r *http.Request) {
-	w.Header().Add("Location", "todo")
-	w.WriteHeader(http.StatusCreated)
-	w.Write([]byte("Creating and saving new snippet..."))
+
+	title := "O snail"
+	content := "O snail\nClimb Mount Fuji,\nBut slowly, slowly!\n\n– Kobayashi Issa"
+	expires := 7
+
+	id, err := app.snippets.Insert(title, content, expires)
+	if err != nil {
+		app.serverError(w, r, err)
+		return
+	}
+
+	location := fmt.Sprintf("/snippet/view/%d", id)
+
+	http.Redirect(w, r, location, http.StatusSeeOther)
+
+	// w.Header().Add("Location", location)
+	// w.WriteHeader(http.StatusCreated)
+	// w.Write([]byte("Creating and saving new snippet..."))
 }

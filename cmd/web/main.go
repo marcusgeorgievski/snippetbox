@@ -13,20 +13,23 @@ import (
 )
 
 type application struct {
-	logger *slog.Logger
+	logger   *slog.Logger
 	snippets *models.SnippetModel
 }
 
 func main() {
+	// Logger
 	logger := slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{
 		AddSource: true,
 		Level:     slog.LevelDebug,
 	}))
 
+	// Flags
 	addr := flag.String("addr", ":4000", "HTTP network address")
 	dsn := flag.String("dsn", "web:pass@/snippetbox?parseTime=true", "MySQL data source name (dsn)")
 	flag.Parse()
 
+	// Database connection
 	db, err := OpenDB(*dsn)
 	if err != nil {
 		logger.Error(err.Error())
@@ -34,10 +37,13 @@ func main() {
 	}
 	defer db.Close()
 
+	// Application struct
 	app := &application{
-		logger: logger,
+		logger:   logger,
 		snippets: &models.SnippetModel{DB: db},
 	}
+
+	// Start server
 
 	logger.Info(fmt.Sprintf("starting server at http://localhost%s", *addr), slog.String("addr", *addr))
 
@@ -47,9 +53,8 @@ func main() {
 	os.Exit(1)
 }
 
-
 func OpenDB(dsn string) (*sql.DB, error) {
-	db, err := sql.Open("mysql","web:pass@/snippetbox?parseTime=true")
+	db, err := sql.Open("mysql", "web:pass@/snippetbox?parseTime=true")
 	if err != nil {
 		return nil, err
 	}
@@ -59,8 +64,6 @@ func OpenDB(dsn string) (*sql.DB, error) {
 		db.Close()
 		return nil, err
 	}
-
-	
 
 	return db, nil
 }
