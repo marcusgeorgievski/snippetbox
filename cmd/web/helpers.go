@@ -27,15 +27,15 @@ func (app *application) render(w http.ResponseWriter, r *http.Request, status in
 	ts, ok := app.templateCache[page]
 	if !ok {
 		err := fmt.Errorf("the template %s does not exist", page)
-		app.serverError(w,r,err)
+		app.serverError(w, r, err)
 	}
-	
+
 	// Inititalize buffer and execute template on it
 	buf := new(bytes.Buffer)
 
-	err := ts.ExecuteTemplate(buf,"base", data)
+	err := ts.ExecuteTemplate(buf, "base", data)
 	if err != nil {
-		app.serverError(w,r,err)
+		app.serverError(w, r, err)
 		return
 	}
 

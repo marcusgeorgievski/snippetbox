@@ -11,15 +11,13 @@ import (
 
 type templateData struct {
 	CurrentYear int
-	Snippet models.Snippet
-	Snippets []models.Snippet
+	Snippet     models.Snippet
+	Snippets    []models.Snippet
 }
 
 var templateFunctions = template.FuncMap{
 	"humanDate": humanDate,
 }
-
-
 
 func (app *application) newTemplateData(r *http.Request) templateData {
 	return templateData{
@@ -67,7 +65,6 @@ func newTemplateCache() (map[string]*template.Template, error) {
 
 	return cache, nil
 }
-
 
 func humanDate(t time.Time) string {
 	return t.Format("02 Jan 2006 at 15:04")
