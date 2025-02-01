@@ -74,3 +74,12 @@ Access it in the templates with
 ```
 
 ## Caching Templates
+
+## Custom Template Function
+
+1. Create a `template.FuncMap` map object containing custom functions
+2. Use `template.Funcs(template.FuncMap)` method to register this before parsing the templates
+   - This step must be done before parsing the templates
+
+- Custom template functions myst only return 1 value
+- Can also use `|` to pipeline instead: `{{.Created | humanDate | printf "Created: "}}`

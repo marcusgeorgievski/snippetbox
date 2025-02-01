@@ -2,14 +2,29 @@ package main
 
 import (
 	"html/template"
+	"net/http"
 	"path/filepath"
+	"time"
 
 	"github.com/marcusgeorgievski/snippetbox/internal/models"
 )
 
 type templateData struct {
+	CurrentYear int
 	Snippet models.Snippet
 	Snippets []models.Snippet
+}
+
+var templateFunctions = template.FuncMap{
+	"humanDate": humanDate,
+}
+
+
+
+func (app *application) newTemplateData(r *http.Request) templateData {
+	return templateData{
+		CurrentYear: time.Now().Year(),
+	}
 }
 
 func newTemplateCache() (map[string]*template.Template, error) {
@@ -26,8 +41,11 @@ func newTemplateCache() (map[string]*template.Template, error) {
 		// Extracts file name (last segment) from full filepath
 		name := filepath.Base(page)
 
+		// Register functions with template
+		ts := template.New(name).Funcs(templateFunctions)
+
 		// Parse base template file
-		ts, err := template.ParseFiles("./ui/html/base.tmpl.html")
+		ts, err := ts.ParseFiles("./ui/html/base.tmpl.html")
 		if err != nil {
 			return nil, err
 		}
@@ -48,4 +66,9 @@ func newTemplateCache() (map[string]*template.Template, error) {
 	}
 
 	return cache, nil
+}
+
+
+func humanDate(t time.Time) string {
+	return t.Format("02 Jan 2006 at 15:04")
 }
