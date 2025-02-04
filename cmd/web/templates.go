@@ -14,6 +14,7 @@ type templateData struct {
 	Snippet     models.Snippet
 	Snippets    []models.Snippet
 	Form        any
+	Flash		string
 }
 
 var templateFunctions = template.FuncMap{
@@ -23,6 +24,7 @@ var templateFunctions = template.FuncMap{
 func (app *application) newTemplateData(r *http.Request) templateData {
 	return templateData{
 		CurrentYear: time.Now().Year(),
+		Flash: app.sessionManager.PopString(r.Context(), "flash"), // automatically add flash, if one exists
 	}
 }
 

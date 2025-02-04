@@ -8,7 +8,11 @@ import (
 	"log/slog"
 	"net/http"
 	"os"
+	"time"
 
+	"github.com/alexedwards/scs/mysqlstore"
+	"github.com/alexedwards/scs/v2"
+	"github.com/go-playground/form/v4"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/marcusgeorgievski/snippetbox/internal/models"
 )
@@ -17,6 +21,8 @@ type application struct {
 	logger        *slog.Logger
 	snippets      *models.SnippetModel
 	templateCache map[string]*template.Template
+	formDecoder   *form.Decoder
+	sessionManager *scs.SessionManager
 }
 
 func main() {
@@ -39,17 +45,28 @@ func main() {
 	}
 	defer db.Close()
 
+	// Template cache
 	templateCache, err := newTemplateCache()
 	if err != nil {
 		logger.Error(err.Error())
 		os.Exit(1)
 	}
 
+	// Form decoder
+	formDecoder := form.NewDecoder()
+
+	// Session manager
+	sessionManager := scs.New()
+	sessionManager.Store = mysqlstore.NewWithCleanupInterval(db, 12 * time.Hour)
+
+
 	// Application struct
 	app := &application{
 		logger:        logger,
 		snippets:      &models.SnippetModel{DB: db},
 		templateCache: templateCache,
+		formDecoder:   formDecoder,
+		sessionManager: sessionManager,
 	}
 
 	// Start server

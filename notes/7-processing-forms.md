@@ -90,3 +90,12 @@ Why we don't use more 'RESTful' route structure like:
 - Embedded structs
 
 - [Generics](https://go.dev/doc/tutorial/generics)
+
+## Automatic form parsing
+
+1. Form decoder
+2. Struct tags on form struct
+3. Decode in handler, check error (pass in form struct pointer)
+
+- Type conversions are handled automatically too, such as `expires` being mapped to an int
+- Check for invalid decoder error (not client's fault)
